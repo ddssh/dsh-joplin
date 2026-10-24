@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Joplin Notes",
+    "description": "Read and edit Joplin notes from DSH: search, fetch, create, update, delete, manage notebooks, import Markdown and trace backlinks through the Joplin Web Clipper data API."
+  }
+}

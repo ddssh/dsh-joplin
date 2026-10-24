@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
+
+# 本地配置：可能有 API token，绝不入库
+joplin.json
+*.local.json
+.env
+.env.*

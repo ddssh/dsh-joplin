@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Joplin 笔记",
+    "description": "在 DSH 里读写 Joplin 笔记：搜索、读取、新建、修改、删除、笔记本管理、Markdown 导入与反向链接，经 Joplin Web Clipper 数据 API。"
+  }
+}

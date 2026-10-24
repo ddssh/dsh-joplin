@@ -1,0 +1,20 @@
+# dsh-joplin bundle patch：Joplin 笔记插件（Host 侧）
+#
+# 只注册 Host 工具（joplin_status / joplin_search_notes / ...），没有 Client 半部，
+# 因此纯 insert 即可热挂载，不需要重启 Harness。
+#
+# token 默认留空：解析顺序为「这里/config → 环境变量 JOPLIN_TOKEN → ~/.dsh/joplin.json」。
+# 这样 token 不必写进 profile 的 YAML（那会把密钥带进 git 或备份）。
+- insert:
+    - id: dsh-joplin
+      name: dsh-joplin
+      config:
+        baseUrl: http://127.0.0.1:41184
+        token: ''
+        timeoutMs: 20000
+        defaultNotebook: ''
+        # 权限：新建默认开；修改/删除默认关，只能显式开启。
+        # 运行时也可以只改 ~/.dsh/joplin.json（优先级高于这里），不必重装。
+        allowCreate: true
+        allowUpdate: false
+        allowDelete: true

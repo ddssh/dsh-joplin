@@ -1,0 +1,52 @@
+{
+  "name": "dsh-joplin",
+  "version": "0.1.0",
+  "description": "Joplin notes plugin for DeepSeek Harness: search, read, create and (opt-in) edit notes through the local Joplin Web Clipper API. Zero runtime dependencies.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "joplin-client.js",
+    "joplin-tools.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "locale/*.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "icon": "./icon.svg",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "joplin",
+    "plugin",
+    "notes",
+    "note-taking",
+    "web-clipper"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ddssh/dsh-joplin.git"
+  },
+  "homepage": "https://github.com/ddssh/dsh-joplin#readme",
+  "bugs": {
+    "url": "https://github.com/ddssh/dsh-joplin/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node test/smoke.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
