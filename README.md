@@ -30,7 +30,19 @@
 
 ## 安装
 
-### 方式一：从 GitHub 安装（推荐）
+### 方式一：npm 官方源
+
+```text
+plugin_manager(action: "install_bundle", target: "dsh-joplin")
+```
+
+或者：
+
+```bash
+dsh plugin --profile <profile> add dsh-joplin
+```
+
+### 方式二：从 GitHub 安装
 
 让 DSH 把仓库直接装进 profile：
 
@@ -38,7 +50,7 @@
 plugin_manager(action: "install_bundle", target: "github:ddssh/dsh-joplin")
 ```
 
-### 方式二：本地目录安装
+### 方式三：本地目录安装
 
 ```bash
 git clone https://github.com/ddssh/dsh-joplin.git
