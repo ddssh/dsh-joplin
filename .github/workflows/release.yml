@@ -74,11 +74,26 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Probe OIDC environment
+        run: |
+          echo "GITHUB_ACTIONS=${GITHUB_ACTIONS:-<unset>}"
+          echo "GITHUB_WORKFLOW_REF=${GITHUB_WORKFLOW_REF}"
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "id-token request URL: present"
+          else
+            echo "::error::ACTIONS_ID_TOKEN_REQUEST_URL missing — id-token: write 没生效"
+          fi
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+            echo "id-token request token: present"
+          else
+            echo "::error::ACTIONS_ID_TOKEN_REQUEST_TOKEN missing — id-token: write 没生效"
+          fi
+
       - name: Publish to npm via OIDC
         if: steps.gate.outputs.publish == 'true'
         run: |
           echo "发布者: ${GITHUB_REPOSITORY} ${GITHUB_WORKFLOW_REF}"
-          npm publish --access public # provenance 由 trusted publishing 自动附带
+          npm publish --access public --loglevel verbose # provenance 由 trusted publishing 自动附带
 
       - name: Verify provenance attestation
         if: steps.gate.outputs.publish == 'true'
