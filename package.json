@@ -1,6 +1,6 @@
 {
   "name": "dsh-joplin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Joplin notes plugin for DeepSeek Harness: search, read, create and (opt-in) edit notes through the local Joplin Web Clipper API. Zero runtime dependencies.",
   "type": "module",
   "main": "index.js",
