@@ -1,13 +1,18 @@
 name: release
 
 # 推 tag（v0.1.1 形式）即发布到 npm 官方源。
-# 走 npm Trusted Publishing（OIDC）：仓库里不需要 NPM_TOKEN 之类的长期密钥。
-# 前置条件：在 npm 包设置里把本仓库绑为受信的 publish 来源
-#   Package settings -> Trusted publishing -> GitHub Actions
-#   Organization or user: ddssh
-#   Repository:           dsh-joplin
-#   Workflow filename:    release.yml
-#   Environment:          （留空）
+# 走 npm Trusted Publishing（OIDC）：仓库里不需要 NPM_TOKEN 之类的长期密钥，
+# 每次发布用 GitHub Actions 的短时 OIDC 身份换取一次性凭证，provenance 自动生成。
+#
+# 前置条件（在 npm 包页 Settings → Trusted publishing 一次性配置）：
+#   Organization or user : ddssh
+#   Repository           : dsh-joplin
+#   Workflow filename    : release.yml        ← 只写文件名，必须含 .yml
+#   Environment name     : 留空
+#   Allowed actions      : 必须勾上「允许 npm publish」
+#                          （2026-09-03 后新建的配置默认只允许 stage publish；
+#                            不勾的话本 workflow 的 npm publish 会被拒绝。）
+# 注意：新建的 trusted publisher 需在 2 天内完成首次成功发布，否则作废。
 
 on:
   push:
@@ -16,7 +21,7 @@ on:
 
 permissions:
   contents: write # 创建 GitHub Release
-  id-token: write # OIDC：npm trusted publishing 与 provenance 签名都靠它
+  id-token: write # OIDC：trusted publishing 与 provenance 签名都靠它（必需）
 
 concurrency:
   group: release-${{ github.ref }}
@@ -26,11 +31,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
+          package-manager-cache: false # 发布构建不缓存
 
       - name: Check npm CLI (trusted publishing needs >= 11.5.1)
         run: |
@@ -70,7 +76,9 @@ jobs:
 
       - name: Publish to npm via OIDC
         if: steps.gate.outputs.publish == 'true'
-        run: npm publish --provenance --access public
+        run: |
+          echo "发布者: ${GITHUB_REPOSITORY} ${GITHUB_WORKFLOW_REF}"
+          npm publish --access public # provenance 由 trusted publishing 自动附带
 
       - name: Verify provenance attestation
         if: steps.gate.outputs.publish == 'true'

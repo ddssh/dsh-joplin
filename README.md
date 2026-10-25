@@ -176,15 +176,25 @@ git tag v0.1.1 && git push origin v0.1.1 # 推 tag 即触发 .github/workflows/r
 
 workflow 会依次做：校验 tag 与 `package.json` 版本一致 → 跑冒烟测试 → 用 OIDC 发布到 npm → 校验 provenance 收据 → 建 GitHub Release。版本已存在时会跳过发布，重跑安全。
 
-一次性配置（在 <https://www.npmjs.com/package/dsh-joplin/access> → **Trusted publishing** → GitHub Actions）：
+一次性配置（npmjs.com 包页 → **Settings** → **Trusted publishing** → Add trusted publisher → GitHub Actions）：
 
 | 字段 | 值 |
 | --- | --- |
-| Publisher | GitHub Actions |
 | Organization or user | `ddssh` |
 | Repository | `dsh-joplin` |
-| Workflow filename | `release.yml` |
-| Environment | 留空 |
+| Workflow filename | `release.yml`（只写文件名，必须带 `.yml`） |
+| Environment name | 留空 |
+| Allowed actions | **勾选「允许 npm publish」**（2026-09-03 之后新建的配置默认只允许 stage publish，不勾会发布失败） |
+
+配置后请 **2 天内**完成首次发布（长时间不发布该配置会作废）；配置一旦创建就不能修改字段，需要改只能删了重建。首次发布成功后，再到 **Settings → Publishing access** 选「Require two-factor authentication and disallow tokens」，把长期 token 通道彻底关掉。
+
+已发布版本 `dist.attestations` 里能看到 provenance 收据，`npm audit signatures` 可校验已安装依赖的签名。
+
+```bash
+npm trust list dsh-joplin                                  # 查看受信发布者
+npm trust github dsh-joplin --file release.yml \           # 或用 CLI 配置（需 npm login + OTP）
+  --repo ddssh/dsh-joplin --allow-publish -y
+```
 
 ## 致谢
 
