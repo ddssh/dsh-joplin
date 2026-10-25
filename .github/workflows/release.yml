@@ -1,0 +1,98 @@
+name: release
+
+# 推 tag（v0.1.1 形式）即发布到 npm 官方源。
+# 走 npm Trusted Publishing（OIDC）：仓库里不需要 NPM_TOKEN 之类的长期密钥。
+# 前置条件：在 npm 包设置里把本仓库绑为受信的 publish 来源
+#   Package settings -> Trusted publishing -> GitHub Actions
+#   Organization or user: ddssh
+#   Repository:           dsh-joplin
+#   Workflow filename:    release.yml
+#   Environment:          （留空）
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write # 创建 GitHub Release
+  id-token: write # OIDC：npm trusted publishing 与 provenance 签名都靠它
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check npm CLI (trusted publishing needs >= 11.5.1)
+        run: |
+          node -v
+          npm -v
+          node -e '
+            const [maj, min, pat] = require("child_process").execSync("npm -v").toString().trim().split(".").map(Number);
+            const need = [11, 5, 1];
+            const cur = [maj, min, pat];
+            const ok = cur[0] > need[0] || (cur[0] === need[0] && (cur[1] > need[1] || (cur[1] === need[1] && cur[2] >= need[2])));
+            if (!ok) { console.error(`npm ${cur.join(".")} is too old for OIDC trusted publishing (need >= 11.5.1)`); process.exit(1); }
+          '
+
+      - name: Verify tag matches package.json version
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "package.json=${PKG}  tag=${TAG}"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match package.json version ${PKG}"
+            exit 1
+          fi
+
+      - name: Smoke test (mock Joplin)
+        run: node test/smoke.mjs
+
+      - name: Skip if this version is already on the registry
+        id: gate
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "dsh-joplin@${VERSION}" version >/dev/null 2>&1; then
+            echo "::notice::dsh-joplin@${VERSION} is already published — skipping publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm via OIDC
+        if: steps.gate.outputs.publish == 'true'
+        run: npm publish --provenance --access public
+
+      - name: Verify provenance attestation
+        if: steps.gate.outputs.publish == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          sleep 10 # 给 registry/CDN 一点传播时间
+          ATTEST=$(npm view "dsh-joplin@${VERSION}" dist.attestations --json || true)
+          echo "${ATTEST:-<empty>}"
+          if ! echo "$ATTEST" | grep -qi 'provenance'; then
+            echo "::warning::暂时读不到 provenance 收据（通常是 CDN 延迟），可稍后在 npm 包页 Provenance 标签查看"
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            echo "::notice::release ${GITHUB_REF_NAME} already exists"
+            exit 0
+          fi
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --notes "npm: https://www.npmjs.com/package/dsh-joplin/v/${VERSION}"
