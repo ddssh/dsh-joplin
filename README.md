@@ -163,39 +163,6 @@ dsh-joplin/
 └── test/                 # mock Joplin 服务 + 冒烟测试
 ```
 
-## 发布（maintainer）
-
-发版用 **npm Trusted Publishing（OIDC）**，仓库里不存任何 npm token，签名与 provenance 由 GitHub Actions 的 OIDC 身份完成。
-
-```bash
-npm version patch --no-git-tag-version   # 改 package.json 版本
-git commit -am "chore(release): v0.1.1"
-git push origin main
-git tag v0.1.1 && git push origin v0.1.1 # 推 tag 即触发 .github/workflows/release.yml
-```
-
-workflow 会依次做：校验 tag 与 `package.json` 版本一致 → 跑冒烟测试 → 用 OIDC 发布到 npm → 校验 provenance 收据 → 建 GitHub Release。版本已存在时会跳过发布，重跑安全。
-
-一次性配置（npmjs.com 包页 → **Settings** → **Trusted publishing** → Add trusted publisher → GitHub Actions）：
-
-| 字段 | 值 |
-| --- | --- |
-| Organization or user | `ddssh` |
-| Repository | `dsh-joplin` |
-| Workflow filename | `release.yml`（只写文件名，必须带 `.yml`） |
-| Environment name | 留空 |
-| Allowed actions | **勾选「允许 npm publish」**（2026-09-03 之后新建的配置默认只允许 stage publish，不勾会发布失败） |
-
-配置后请 **2 天内**完成首次发布（长时间不发布该配置会作废）；配置一旦创建就不能修改字段，需要改只能删了重建。首次发布成功后，再到 **Settings → Publishing access** 选「Require two-factor authentication and disallow tokens」，把长期 token 通道彻底关掉。
-
-已发布版本 `dist.attestations` 里能看到 provenance 收据，`npm audit signatures` 可校验已安装依赖的签名。
-
-```bash
-npm trust list dsh-joplin                                  # 查看受信发布者
-npm trust github dsh-joplin --file release.yml \           # 或用 CLI 配置（需 npm login + OTP）
-  --repo ddssh/dsh-joplin --allow-publish -y
-```
-
 ## 致谢
 
 能力面参考了 [dweigend/joplin-mcp-server](https://github.com/dweigend/joplin-mcp-server)（Python + FastMCP 实现），本插件是面向 DSH 的原生 Node 重写：保留 CRUD、笔记本树、Markdown 导入与反向链接，补上权限闸门、搜索兜底与写入校验，并修正了原实现里笔记本路径在扁平返回时会退化的问题。
