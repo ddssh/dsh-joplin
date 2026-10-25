@@ -4,6 +4,8 @@
 
 *Read and write your local Joplin notes from DeepSeek Harness. Zero runtime dependencies; read-only by default.*
 
+[![npm version](https://img.shields.io/npm/v/dsh-joplin.svg)](https://www.npmjs.com/package/dsh-joplin)
+[![npm downloads](https://img.shields.io/npm/dm/dsh-joplin.svg)](https://www.npmjs.com/package/dsh-joplin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 
@@ -30,7 +32,7 @@
 
 ## 安装
 
-### 方式一：npm 官方源
+### 方式一：npm 官方源（[dsh-joplin](https://www.npmjs.com/package/dsh-joplin)）
 
 ```text
 plugin_manager(action: "install_bundle", target: "dsh-joplin")
